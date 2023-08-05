@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TrainService {
@@ -23,15 +24,28 @@ public class TrainService {
     public Integer addTrain(AddTrainEntryDto trainEntryDto){
 
         //Add the train to the trainRepository
+        Train trainOptional= trainRepository.findByDepartureTime(trainEntryDto.getDepartureTime());
+
         //and route String logic to be taken from the Problem statement.
+       List<Station> list = trainEntryDto.getStationRoute();
+       StringBuilder r = new StringBuilder();
+
+       for(Station st:list){
+           r.append(st);
+       }
+       trainOptional.setRoute(r.toString());
+
         //Save the train and return the trainId that is generated from the database.
+       Train savedtrain =  trainRepository.save(trainOptional);
+
         //Avoid using the lombok library
-        return null;
+        return savedtrain.getTrainId();
     }
 
     public Integer calculateAvailableSeats(SeatAvailabilityEntryDto seatAvailabilityEntryDto){
 
         //Calculate the total seats available
+
         //Suppose the route is A B C D
         //And there are 2 seats avaialble in total in the train
         //and 2 tickets are booked from A to C and B to D.
