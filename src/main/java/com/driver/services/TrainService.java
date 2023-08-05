@@ -6,12 +6,12 @@ import com.driver.model.Passenger;
 import com.driver.model.Station;
 import com.driver.model.Ticket;
 import com.driver.model.Train;
+import com.driver.repository.TicketRepository;
 import com.driver.repository.TrainRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +20,9 @@ public class TrainService {
 
     @Autowired
     TrainRepository trainRepository;
+
+    @Autowired
+    TicketRepository ticketRepository;
 
     public Integer addTrain(AddTrainEntryDto trainEntryDto){
 
@@ -46,6 +49,8 @@ public class TrainService {
 
         //Calculate the total seats available
 
+
+
         //Suppose the route is A B C D
         //And there are 2 seats avaialble in total in the train
         //and 2 tickets are booked from A to C and B to D.
@@ -60,21 +65,59 @@ public class TrainService {
     public Integer calculatePeopleBoardingAtAStation(Integer trainId,Station station) throws Exception{
 
         //We need to find out the number of people who will be boarding a train from a particular station
+        Optional<Train> trainOptional = trainRepository.findById(trainId);
+
+        if(!trainOptional.isPresent()){
+            return null;
+        }
+        if(!trainOptional.get().getRoute().contains(station.toString())){
+            throw new Exception("Train is not passing from this station");
+        }
+
+        int c =0;
+
+        List<Ticket> tickets  = ticketRepository.findAll();
+
+        for(Ticket t : tickets){
+            if(t.getFromStation() == station){
+                c++;
+            }
+        }
+
         //if the trainId is not passing through that station
         //throw new Exception("Train is not passing from this station");
         //  in a happy case we need to find out the number of such people.
 
 
-        return 0;
+        return c;
     }
 
     public Integer calculateOldestPersonTravelling(Integer trainId){
 
         //Throughout the journey of the train between any 2 stations
+        Optional<Train> train = trainRepository.findById(trainId);
+
+        if(!train.isPresent()) return null;
+
+        int old =0;
+        List<Ticket> ticketList = train.get().getBookedTickets();
+
+        for(Ticket t: ticketList){
+            List<Passenger> passengerList  = t.getPassengersList();
+            for(Passenger p: passengerList){
+                if(p.getAge()>old){
+                    old = p.getAge();
+                }
+            }
+        }
+
+
+
+
         //We need to find out the age of the oldest person that is travelling the train
         //If there are no people travelling in that train you can return 0
 
-        return 0;
+        return old;
     }
 
     public List<Integer> trainsBetweenAGivenTime(Station station, LocalTime startTime, LocalTime endTime){
